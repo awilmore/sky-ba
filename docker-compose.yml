@@ -1,0 +1,6 @@
+version: '2'
+
+services:
+  sky-ba:
+    build: .
+    image: repo.skyops.io/sky-ba

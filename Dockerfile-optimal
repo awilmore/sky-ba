@@ -1,0 +1,38 @@
+FROM rancher/jenkins-swarm:v0.2.0
+MAINTAINER Adam Wilmore adam.wilmore@gmail.com
+
+USER root
+
+# Prepare image
+COPY artefacts/ /
+
+# Do everything
+RUN rm -rf /var/lib/{apt,dpkg,cache,log}/ && \
+    apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+      apt-transport-https \
+      software-properties-common \
+      build-essential \
+      locales \
+      curl \
+      wget \
+      less \
+      openssh-client \
+      net-tools \
+      passwd \
+      sudo \
+      zip \
+      unzip \
+      vim && \
+    cp -p /usr/share/zoneinfo/Australia/Sydney /etc/localtime && \
+    locale-gen en_US en_US.UTF-8 en_AU en_AU.UTF-8 && \
+    dpkg-reconfigure locales && \
+    /tmp/install-docker.sh && \
+    /tmp/install-rancher-tools.sh && \
+    /tmp/install-node-tools.sh && \
+    /tmp/prepare-env.sh && \
+    rm -rf /tmp/* && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}/

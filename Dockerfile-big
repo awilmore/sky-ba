@@ -1,0 +1,58 @@
+FROM rancher/jenkins-swarm:v0.2.0
+MAINTAINER Adam Wilmore adam.wilmore@gmail.com
+
+USER root
+
+# Fix sources
+COPY artefacts/etc/apt/sources.list /etc/apt/sources.list
+RUN rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+# Get packages first, including locales
+RUN apt-get update && \
+      apt-get upgrade -y && \
+      apt-get install -y \
+        apt-transport-https \
+        software-properties-common \
+        build-essential \
+        locales \
+        curl \
+        wget \
+        less \
+        openssh-client \
+        net-tools \
+        passwd \
+        sudo \
+        zip \
+        unzip \
+        vim 
+      
+# Set TZ and Locale stuff
+RUN cp -p /usr/share/zoneinfo/Australia/Sydney /etc/localtime && \
+  locale-gen en_US en_US.UTF-8 en_AU en_AU.UTF-8 && \
+  dpkg-reconfigure locales
+
+# Install docker
+COPY artefacts/tmp/install-docker.sh /tmp/install-docker.sh
+RUN /tmp/install-docker.sh
+
+# Install rancher tools
+COPY artefacts/tmp/install-rancher-tools.sh /tmp/install-rancher-tools.sh
+RUN /tmp/install-rancher-tools.sh
+
+# Install node tools
+COPY artefacts/tmp/install-node-tools.sh /tmp/install-node-tools.sh
+RUN /tmp/install-node-tools.sh
+
+# Prepare useful env vars
+COPY artefacts/tmp/prepare-env.sh /tmp/prepare-env.sh
+RUN /tmp/prepare-env.sh
+
+# Prepare root
+COPY artefacts/root /root
+
+# Clean up
+RUN rm -rf /tmp/* && \
+  apt-get clean autoclean && \
+  apt-get autoremove -y && \
+  rm -rf /var/lib/{apt,dpkg,cache,log}/
+
